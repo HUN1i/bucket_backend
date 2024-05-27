@@ -1,4 +1,6 @@
-require('dotenv').config();
+const dotenv = require('dotenv');
+dotenv.config();
+
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, Profile } from 'passport-google-oauth20';
@@ -7,10 +9,9 @@ import { Strategy, Profile } from 'passport-google-oauth20';
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor() {
     super({
-      clientID:
-        '741527979055-onhvvcofhmg38lekliv24epu0vj7ktlc.apps.googleusercontent.com',
-      clientSecret: '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',
-      callbackURL: 'http://localhost:3000/auth/google/redirect',
+      clientID: process.env.OAUTH_GOOGLE_ID,
+      clientSecret: process.env.OAUTH_GOOGLE_SECRET,
+      callbackURL: process.env.OAUTH_GOOGLE_REDIRECT,
       scope: ['email', 'profile'],
     });
   }
