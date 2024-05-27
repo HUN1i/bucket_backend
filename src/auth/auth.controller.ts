@@ -16,7 +16,8 @@ export class AuthController {
   @UseGuards(AuthGuard('google'))
   async googleAuthCallback(@Req() req, @Res() res) {
     console.log(req.user.providerId);
-    const token = this.authService.createAccessToken(req.user);
-    return res.redirect('http://localhost:3001' + '?token=1234');
+    await this.authService.assignAccessToken(req.user);
+    const token = await this.authService.createAccessToken(req.user);
+    return res.redirect('http://localhost:3001' + `?token=${token}`);
   }
 }
