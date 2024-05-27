@@ -15,7 +15,8 @@ export class AuthController {
   @Get('google/redirect')
   @UseGuards(AuthGuard('google'))
   async googleAuthCallback(@Req() req, @Res() res) {
-    return;
-    // return res.redirect('http://localhost:3001' + req.token);
+    console.log(req.user.providerId);
+    const token = this.authService.createAccessToken(req.user);
+    return res.redirect('http://localhost:3001' + '?token=1234');
   }
 }
