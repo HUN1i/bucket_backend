@@ -1,5 +1,4 @@
-import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
-import { SuccessType } from '../entities/enum/success-type';
+import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class CreateBoardDto {
   @IsNumber()
