@@ -1,6 +1,6 @@
 const dotenv = require('dotenv');
 dotenv.config();
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable } from '@nestjs/common';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/auth.entity';
@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import { TokenPayload } from './payload/tokenPayload';
 
+const secret = process.env.SECRET_KEY;
 @Injectable()
 export class AuthService {
   constructor(
@@ -21,7 +22,6 @@ export class AuthService {
       where: { user_id: user.email },
     });
     if (isExist.length === 0) {
-      console.log(user.name);
       await this.userRepository.save({
         user_id: user.email,
         name: user.name,
@@ -39,5 +39,29 @@ export class AuthService {
       expiresIn: '12h',
       secret: process.env.SECRET_KEY,
     });
+  }
+
+  public async validateToken(token: string) {
+    try {
+      const JWT = token.replace('Bearer ', '');
+      const verifiedToken: any = this.jwtService.verify(JWT, {
+        secret,
+      });
+      return await this.userRepository.find({
+        where: { uid: verifiedToken.uid },
+      });
+    } catch (err) {
+      switch (err.message) {
+        case 'invalid signature':
+          throw new HttpException('유효하지 않은 토큰', 401);
+
+        case 'jwt expired':
+          throw new HttpException('토큰 만료됨', 410);
+
+        default:
+          console.log(err);
+          throw new HttpException('서버 에러', 500);
+      }
+    }
   }
 }
