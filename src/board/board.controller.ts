@@ -38,6 +38,11 @@ export class BoardController {
     return this.boardService.findOld(token);
   }
 
+  @Get('/tag')
+  findByTag(@Query('tag') tag: string) {
+    return this.boardService.findByTag(tag);
+  }
+
   @Get(':id')
   findByUser(@Param('id') id: string) {
     return this.boardService.findByUser(+id);

@@ -23,6 +23,14 @@ export class BoardService {
     return this.boardRepository.find();
   }
 
+  async findByTag(tag: string) {
+    console.log(tag);
+    return await this.boardRepository
+      .createQueryBuilder('board')
+      .where('board.tag LIKE :tag', { tag: `%${tag}%` })
+      .getMany();
+  }
+
   async findRecent(token: string) {
     const user = await this.authService.validateToken(token);
     return await this.boardRepository.find({

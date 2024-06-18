@@ -18,4 +18,8 @@ export class TagService {
   findAll() {
     return this.tagRepository.find();
   }
+
+  delete(id: number) {
+    this.tagRepository.delete(id);
+  }
 }
