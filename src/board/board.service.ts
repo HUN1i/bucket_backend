@@ -5,12 +5,14 @@ import { Board } from './entities/board.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SuccessType } from './entities/enum/success-type';
+import { AuthService } from 'src/auth/auth.service';
 
 @Injectable()
 export class BoardService {
   constructor(
     @InjectRepository(Board)
     private readonly boardRepository: Repository<Board>,
+    private readonly authService: AuthService,
   ) {}
   create(createBoardDto: CreateBoardDto) {
     console.log(createBoardDto);
@@ -21,8 +23,34 @@ export class BoardService {
     return this.boardRepository.find();
   }
 
-  findOne(id: number) {
-    return this.boardRepository.find({ where: { id } });
+  async findRecent(token: string) {
+    const user = await this.authService.validateToken(token);
+    return await this.boardRepository.find({
+      where: {
+        user_id: user[0].uid,
+      },
+      order: {
+        createdAt: 'DESC',
+      },
+      take: 3,
+    });
+  }
+
+  async findOld(token: string) {
+    const user = await this.authService.validateToken(token);
+    return await this.boardRepository.find({
+      where: {
+        user_id: user[0].uid,
+      },
+      order: {
+        createdAt: 'ASC',
+      },
+      take: 3,
+    });
+  }
+
+  findByUser(user_id: number) {
+    return this.boardRepository.find({ where: { user_id } });
   }
 
   update(id: number, updateBoardDto: UpdateBoardDto) {
@@ -34,6 +62,6 @@ export class BoardService {
   }
 
   remove(id: number) {
-    return `This action removes a #${id} board`;
+    return this.boardRepository.delete(id);
   }
 }

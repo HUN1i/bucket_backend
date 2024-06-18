@@ -7,6 +7,7 @@ import {
   Delete,
   Put,
   Query,
+  Headers,
 } from '@nestjs/common';
 import { BoardService } from './board.service';
 import { CreateBoardDto } from './dto/create-board.dto';
@@ -27,9 +28,19 @@ export class BoardController {
     return this.boardService.findAll();
   }
 
+  @Get('/recent')
+  findRecent(@Headers('Authorization') token: string) {
+    return this.boardService.findRecent(token);
+  }
+
+  @Get('/old')
+  findOld(@Headers('Authorization') token: string) {
+    return this.boardService.findOld(token);
+  }
+
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.boardService.findOne(+id);
+  findByUser(@Param('id') id: string) {
+    return this.boardService.findByUser(+id);
   }
 
   @Put(':id')
