@@ -23,11 +23,12 @@ export class BoardService {
     return this.boardRepository.find();
   }
 
-  async findByTag(tag: string) {
-    console.log(tag);
+  async findByTag(token: string, tag: string) {
+    const user = await this.authService.validateToken(token);
     return await this.boardRepository
       .createQueryBuilder('board')
-      .where('board.tag LIKE :tag', { tag: `%${tag}%` })
+      .andWhere('board.tag LIKE :tag', { tag: `%${tag}%` })
+      .andWhere('board.user_id = :user_id', { user_id: user[0].uid })
       .getMany();
   }
 

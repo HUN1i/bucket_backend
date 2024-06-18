@@ -39,8 +39,11 @@ export class BoardController {
   }
 
   @Get('/tag')
-  findByTag(@Query('tag') tag: string) {
-    return this.boardService.findByTag(tag);
+  findByTag(
+    @Headers('Authorization') token: string,
+    @Query('tag') tag: string,
+  ) {
+    return this.boardService.findByTag(token, tag);
   }
 
   @Get(':id')
