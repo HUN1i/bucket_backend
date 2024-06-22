@@ -23,4 +23,9 @@ export class TagController {
   findAll() {
     return this.tagService.findAll();
   }
+
+  @Delete(':id')
+  delete(@Param() id: number) {
+    return this.tagService.delete(id);
+  }
 }
