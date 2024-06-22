@@ -1,9 +1,6 @@
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class CreateBoardDto {
-  @IsNumber()
-  user_id: number;
-
   @IsOptional()
   @IsString()
   thumbnail: string;
@@ -15,9 +12,10 @@ export class CreateBoardDto {
   @IsString()
   tag: string;
 
-  @IsString()
-  detail: string;
-
+  @IsOptional()
   @IsString()
   people: string;
+
+  @IsOptional()
+  prologue: string;
 }

@@ -19,13 +19,16 @@ export class BoardController {
   constructor(private readonly boardService: BoardService) {}
 
   @Post()
-  create(@Body() createBoardDto: CreateBoardDto) {
-    return this.boardService.create(createBoardDto);
+  create(
+    @Body() createBoardDto: CreateBoardDto,
+    @Headers('Authorization') token: string,
+  ) {
+    return this.boardService.create(token, createBoardDto);
   }
 
   @Get()
-  findAll() {
-    return this.boardService.findAll();
+  findAll(@Headers('Authorization') token: string) {
+    return this.boardService.findAll(token);
   }
 
   @Get('/recent')
@@ -38,6 +41,11 @@ export class BoardController {
     return this.boardService.findOld(token);
   }
 
+  @Get('doing')
+  findDoing(@Headers('Authorization') token: string) {
+    return this.boardService.findDoing(token);
+  }
+
   @Get('/tag')
   findByTag(
     @Headers('Authorization') token: string,
@@ -46,9 +54,14 @@ export class BoardController {
     return this.boardService.findByTag(token, tag);
   }
 
+  @Get('/success')
+  findBySuccess(@Headers('Authorization') token: string) {
+    return this.boardService.findBySuccess(token);
+  }
+
   @Get(':id')
   findByUser(@Param('id') id: string) {
-    return this.boardService.findByUser(+id);
+    return this.boardService.findOne(+id);
   }
 
   @Put(':id')
@@ -58,8 +71,8 @@ export class BoardController {
   }
 
   @Put('/success/:id')
-  updateSuccess(@Param('id') id: number, @Query('type') success: SuccessType) {
-    return this.boardService.updateSuccess(id, success);
+  updateSuccess(@Param('id') id: number, @Body() body: any) {
+    return this.boardService.updateSuccess(id, body);
   }
 
   @Delete(':id')

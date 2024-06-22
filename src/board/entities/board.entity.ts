@@ -15,7 +15,7 @@ export class Board {
   @Column()
   user_id: number;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', nullable: true })
   thumbnail: string;
 
   @Column()
@@ -24,10 +24,13 @@ export class Board {
   @Column()
   tag: string;
 
-  @Column({ type: 'text' })
+  @Column({ nullable: true })
+  prologue: string;
+
+  @Column({ type: 'text', nullable: true })
   detail: string;
 
-  @Column()
+  @Column({ nullable: true })
   people: string;
 
   @Column({
