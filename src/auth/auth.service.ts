@@ -1,11 +1,15 @@
 const dotenv = require('dotenv');
 dotenv.config();
-import { HttpException, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/auth.entity';
 import { Repository } from 'typeorm';
-import { JwtService } from '@nestjs/jwt';
+import { JsonWebTokenError, JwtService, TokenExpiredError } from '@nestjs/jwt';
 import { TokenPayload } from './payload/tokenPayload';
 
 const secret = process.env.SECRET_KEY;
@@ -51,17 +55,8 @@ export class AuthService {
         where: { uid: verifiedToken.uid },
       });
     } catch (err) {
-      switch (err.message) {
-        case 'invalid signature':
-          throw new HttpException('유효하지 않은 토큰', 401);
-
-        case 'jwt expired':
-          throw new HttpException('토큰 만료됨', 410);
-
-        default:
-          console.log(err);
-          throw new HttpException('서버 에러', 500);
-      }
+      console.log(err);
+      throw InternalServerErrorException;
     }
   }
 }

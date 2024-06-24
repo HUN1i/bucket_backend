@@ -31,6 +31,10 @@ export class BoardController {
     return this.boardService.findAll(token);
   }
 
+  @Get('/random')
+  findRandom(@Headers('Authorization') token: string) {
+    return this.boardService.findByRandom(token);
+  }
   @Get('/recent')
   findRecent(@Headers('Authorization') token: string) {
     return this.boardService.findRecent(token);
@@ -65,9 +69,9 @@ export class BoardController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateBoardDto: UpdateBoardDto) {
+  async update(@Param('id') id: string, @Body() updateBoardDto: any) {
     if (!updateBoardDto) return 1;
-    return this.boardService.update(+id, updateBoardDto);
+    return await this.boardService.update(+id, updateBoardDto);
   }
 
   @Put('/success/:id')

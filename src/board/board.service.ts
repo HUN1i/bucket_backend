@@ -3,7 +3,7 @@ import { CreateBoardDto } from './dto/create-board.dto';
 import { UpdateBoardDto } from './dto/update-board.dto';
 import { Board } from './entities/board.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { AuthService } from 'src/auth/auth.service';
 import { Tag } from 'src/tag/entities/tag.entity';
 import { SuccessType } from './entities/enum/success-type';
@@ -48,6 +48,18 @@ export class BoardService {
     return await this.boardRepository.find({ where: { user_id: user[0].uid } });
   }
 
+  async findByRandom(token: string) {
+    const user = await this.authService.validateToken(token);
+
+    return await this.boardRepository
+      .createQueryBuilder('board')
+      .select(['board.id', 'board.thumbnail', 'board.name'])
+      .where('board.user_id = :user_id', { user_id: user[0].uid })
+      .orderBy('RAND()')
+      .limit(5)
+      .getMany();
+  }
+
   async findDoing(token: string) {
     const user = await this.authService.validateToken(token);
     return await this.boardRepository.find({
@@ -59,11 +71,13 @@ export class BoardService {
   }
   async findByTag(token: string, tag: string) {
     const user = await this.authService.validateToken(token);
-    return await this.boardRepository
-      .createQueryBuilder('board')
-      .andWhere('board.tag LIKE :tag', { tag: `%${tag}%` })
-      .andWhere('board.user_id = :user_id', { user_id: user[0].uid })
-      .getMany();
+    return await this.boardRepository.find({
+      where: {
+        tag: Like(`%${tag}%`),
+        user_id: user[0].uid,
+        success: SuccessType.DOING,
+      },
+    });
   }
 
   async findBySuccess(token: string) {
