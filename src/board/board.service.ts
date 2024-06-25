@@ -3,7 +3,7 @@ import { CreateBoardDto } from './dto/create-board.dto';
 import { UpdateBoardDto } from './dto/update-board.dto';
 import { Board } from './entities/board.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { AuthService } from 'src/auth/auth.service';
 import { Tag } from 'src/tag/entities/tag.entity';
 import { SuccessType } from './entities/enum/success-type';
@@ -24,10 +24,10 @@ export class BoardService {
     const user = await this.authService.validateToken(token);
     for (const tagName of tags) {
       const tagResult = await this.tagRepository.findOne({
-        where: { name: tagName.trim() },
+        where: { name: tagName.trim(), user_id: user[0].uid },
       });
       if (!tagResult) {
-        this.tagRepository.save({ name: tagName.trim() });
+        this.tagRepository.save({ name: tagName.trim(), user_id: user[0].uid });
       }
       tag = tag === undefined ? tagName.trim() : tag + ',' + tagName.trim();
     }
@@ -48,6 +48,74 @@ export class BoardService {
     return await this.boardRepository.find({ where: { user_id: user[0].uid } });
   }
 
+  async findByRandom(token: string) {
+    const user = await this.authService.validateToken(token);
+
+    return await this.boardRepository
+      .createQueryBuilder('board')
+      .select(['board.id', 'board.thumbnail', 'board.name'])
+      .where('board.user_id = :user_id', { user_id: user[0].uid })
+      .orderBy('RAND()')
+      .limit(5)
+      .getMany();
+  }
+
+  async findAchieve(token: string) {
+    const user = await this.authService.validateToken(token);
+    const all = await this.boardRepository.count({
+      where: { user_id: user[0].uid },
+    });
+    const success = await this.boardRepository.count({
+      where: { user_id: user[0].uid, success: SuccessType.SUCCESS },
+    });
+    const doing = await this.boardRepository.count({
+      where: { user_id: user[0].uid, success: SuccessType.DOING },
+    });
+
+    return { data: { all, success, doing } };
+  }
+
+  async findAverage(token: string) {
+    const user = await this.authService.validateToken(token);
+    const all = await this.boardRepository.count({
+      where: { user_id: user[0].uid },
+    });
+
+    const oldest = await this.boardRepository.findOne({
+      select: ['createdAt'],
+      where: { user_id: user[0].uid },
+      order: {
+        createdAt: 'ASC',
+      },
+    });
+
+    const now = new Date();
+    const utc = now.getTime() + now.getTimezoneOffset() * 60 * 1000;
+    const koreaTimeDiff = 9 * 60 * 60 * 1000;
+    const korNow = new Date(utc + koreaTimeDiff);
+
+    const givenDate: Date = new Date(oldest.createdAt.toString());
+    const timeDifference = korNow.getTime() - givenDate.getTime();
+    const dayDifference = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+
+    const monthCount = await this.boardRepository
+      .createQueryBuilder('board')
+      .select("DATE_FORMAT(board.createdAt, '%Y-%m')", 'month')
+      .addSelect('COUNT(*)', 'count')
+      .where('board.user_id = :user_id', { user_id: user[0].uid })
+      .groupBy('month')
+      .orderBy('month')
+      .getRawMany();
+
+    const totalCount = monthCount.reduce(
+      (sum, item) => sum + parseInt(item.count, 10),
+      0,
+    );
+    const dayAverage = (all / dayDifference).toFixed(1);
+    const averageCount = (totalCount / monthCount.length).toFixed(1);
+    return { day: dayAverage, month: monthCount, average: averageCount };
+  }
+
   async findDoing(token: string) {
     const user = await this.authService.validateToken(token);
     return await this.boardRepository.find({
@@ -59,11 +127,13 @@ export class BoardService {
   }
   async findByTag(token: string, tag: string) {
     const user = await this.authService.validateToken(token);
-    return await this.boardRepository
-      .createQueryBuilder('board')
-      .andWhere('board.tag LIKE :tag', { tag: `%${tag}%` })
-      .andWhere('board.user_id = :user_id', { user_id: user[0].uid })
-      .getMany();
+    return await this.boardRepository.find({
+      where: {
+        tag: Like(`%${tag}%`),
+        user_id: user[0].uid,
+        success: SuccessType.DOING,
+      },
+    });
   }
 
   async findBySuccess(token: string) {

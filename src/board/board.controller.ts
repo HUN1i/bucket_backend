@@ -11,8 +11,6 @@ import {
 } from '@nestjs/common';
 import { BoardService } from './board.service';
 import { CreateBoardDto } from './dto/create-board.dto';
-import { UpdateBoardDto } from './dto/update-board.dto';
-import { SuccessType } from './entities/enum/success-type';
 
 @Controller('board')
 export class BoardController {
@@ -29,6 +27,11 @@ export class BoardController {
   @Get()
   findAll(@Headers('Authorization') token: string) {
     return this.boardService.findAll(token);
+  }
+
+  @Get('/random')
+  findRandom(@Headers('Authorization') token: string) {
+    return this.boardService.findByRandom(token);
   }
 
   @Get('/recent')
@@ -54,6 +57,15 @@ export class BoardController {
     return this.boardService.findByTag(token, tag);
   }
 
+  @Get('/achieve')
+  findAchieve(@Headers('Authorization') token: string) {
+    return this.boardService.findAchieve(token);
+  }
+
+  @Get('/average')
+  findAverage(@Headers('Authorization') token: string) {
+    return this.boardService.findAverage(token);
+  }
   @Get('/success')
   findBySuccess(@Headers('Authorization') token: string) {
     return this.boardService.findBySuccess(token);
@@ -65,9 +77,9 @@ export class BoardController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateBoardDto: UpdateBoardDto) {
+  async update(@Param('id') id: string, @Body() updateBoardDto: any) {
     if (!updateBoardDto) return 1;
-    return this.boardService.update(+id, updateBoardDto);
+    return await this.boardService.update(+id, updateBoardDto);
   }
 
   @Put('/success/:id')
