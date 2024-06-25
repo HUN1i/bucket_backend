@@ -7,4 +7,7 @@ export class Tag {
 
   @Column()
   name: string;
+
+  @Column()
+  user_id: number;
 }

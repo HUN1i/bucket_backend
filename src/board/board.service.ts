@@ -24,10 +24,10 @@ export class BoardService {
     const user = await this.authService.validateToken(token);
     for (const tagName of tags) {
       const tagResult = await this.tagRepository.findOne({
-        where: { name: tagName.trim() },
+        where: { name: tagName.trim(), user_id: user[0].uid },
       });
       if (!tagResult) {
-        this.tagRepository.save({ name: tagName.trim() });
+        this.tagRepository.save({ name: tagName.trim(), user_id: user[0].uid });
       }
       tag = tag === undefined ? tagName.trim() : tag + ',' + tagName.trim();
     }
@@ -58,6 +58,62 @@ export class BoardService {
       .orderBy('RAND()')
       .limit(5)
       .getMany();
+  }
+
+  async findAchieve(token: string) {
+    const user = await this.authService.validateToken(token);
+    const all = await this.boardRepository.count({
+      where: { user_id: user[0].uid },
+    });
+    const success = await this.boardRepository.count({
+      where: { user_id: user[0].uid, success: SuccessType.SUCCESS },
+    });
+    const doing = await this.boardRepository.count({
+      where: { user_id: user[0].uid, success: SuccessType.DOING },
+    });
+
+    return { data: { all, success, doing } };
+  }
+
+  async findAverage(token: string) {
+    const user = await this.authService.validateToken(token);
+    const all = await this.boardRepository.count({
+      where: { user_id: user[0].uid },
+    });
+
+    const oldest = await this.boardRepository.findOne({
+      select: ['createdAt'],
+      where: { user_id: user[0].uid },
+      order: {
+        createdAt: 'ASC',
+      },
+    });
+
+    const now = new Date();
+    const utc = now.getTime() + now.getTimezoneOffset() * 60 * 1000;
+    const koreaTimeDiff = 9 * 60 * 60 * 1000;
+    const korNow = new Date(utc + koreaTimeDiff);
+
+    const givenDate: Date = new Date(oldest.createdAt.toString());
+    const timeDifference = korNow.getTime() - givenDate.getTime();
+    const dayDifference = Math.floor(timeDifference / (1000 * 60 * 60 * 24));
+
+    const monthCount = await this.boardRepository
+      .createQueryBuilder('board')
+      .select("DATE_FORMAT(board.createdAt, '%Y-%m')", 'month')
+      .addSelect('COUNT(*)', 'count')
+      .where('board.user_id = :user_id', { user_id: user[0].uid })
+      .groupBy('month')
+      .orderBy('month')
+      .getRawMany();
+
+    const totalCount = monthCount.reduce(
+      (sum, item) => sum + parseInt(item.count, 10),
+      0,
+    );
+    const dayAverage = (all / dayDifference).toFixed(1);
+    const averageCount = (totalCount / monthCount.length).toFixed(1);
+    return { day: dayAverage, month: monthCount, average: averageCount };
   }
 
   async findDoing(token: string) {
