@@ -11,7 +11,7 @@ import { Tag } from 'src/tag/entities/tag.entity';
     TypeOrmModule.forRoot({
       type: 'mysql',
       host: process.env.DATABASE_HOST,
-      port: 3306,
+      port: +process.env.DATABASE_PORT,
       username: process.env.DATABASE_NAME,
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_DB,
