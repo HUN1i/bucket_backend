@@ -111,7 +111,12 @@ export class BoardService {
       (sum, item) => sum + parseInt(item.count, 10),
       0,
     );
-    const dayAverage = (all / dayDifference).toFixed(1);
+    let dayAverage;
+    if (dayDifference === 0) {
+      dayAverage = all.toFixed(1);
+    } else {
+      dayAverage = (all / dayDifference).toFixed(1);
+    }
     const averageCount = (totalCount / monthCount.length).toFixed(1);
     return { day: dayAverage, month: monthCount, average: averageCount };
   }
