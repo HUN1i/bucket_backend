@@ -22,14 +22,19 @@ export class BoardService {
     const { name, thumbnail, people, prologue } = createBoardDto;
     const tags = createBoardDto.tag.split(',');
     const user = await this.authService.validateToken(token);
+
     for (const tagName of tags) {
       const tagResult = await this.tagRepository.findOne({
         where: { name: tagName.trim(), user_id: user[0].uid },
       });
       if (!tagResult) {
+        if (tags[0] === '') continue;
         this.tagRepository.save({ name: tagName.trim(), user_id: user[0].uid });
       }
-      tag = tag === undefined ? tagName.trim() : tag + ',' + tagName.trim();
+      if (tags[0] === '') {
+        tag = null;
+      } else
+        tag = tag === undefined ? tagName.trim() : tag + ',' + tagName.trim();
     }
 
     return this.boardRepository.save({
@@ -45,7 +50,10 @@ export class BoardService {
   async findAll(token: string) {
     const user = await this.authService.validateToken(token);
 
-    return await this.boardRepository.find({ where: { user_id: user[0].uid } });
+    return await this.boardRepository.find({
+      where: { user_id: user[0].uid },
+      order: { id: 'DESC' },
+    });
   }
 
   async findByRandom(token: string) {
@@ -128,6 +136,7 @@ export class BoardService {
         success: SuccessType.DOING,
         user_id: user[0].uid,
       },
+      order: { id: 'DESC' },
     });
   }
   async findByTag(token: string, tag: string) {
@@ -138,6 +147,7 @@ export class BoardService {
         user_id: user[0].uid,
         success: SuccessType.DOING,
       },
+      order: { id: 'DESC' },
     });
   }
 
@@ -147,6 +157,7 @@ export class BoardService {
       .createQueryBuilder('board')
       .andWhere('board.user_id = :user_id', { user_id: user[0].uid })
       .andWhere('board.success = :success', { success: 'success' })
+      .orderBy('board.id', 'DESC')
       .getMany();
   }
 
