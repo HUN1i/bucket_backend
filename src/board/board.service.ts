@@ -56,6 +56,23 @@ export class BoardService {
     });
   }
 
+  async findByOthers(token: string) {
+    const user = await this.authService.validateToken(token);
+
+    return await this.boardRepository
+      .createQueryBuilder('board')
+      .select([
+        'board.id',
+        'board.thumbnail',
+        'board.name',
+        'board.tag',
+        'board.createdAt',
+      ])
+      .where('board.user_id != :user_id', { user_id: user[0].uid })
+      .orderBy('RAND()')
+      .limit(4)
+      .getMany();
+  }
   async findByRandom(token: string) {
     const user = await this.authService.validateToken(token);
 
@@ -171,7 +188,7 @@ export class BoardService {
       order: {
         createdAt: 'DESC',
       },
-      take: 3,
+      take: 4,
     });
   }
 
@@ -185,7 +202,7 @@ export class BoardService {
       order: {
         createdAt: 'ASC',
       },
-      take: 3,
+      take: 4,
     });
   }
 
