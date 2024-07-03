@@ -34,6 +34,10 @@ export class BoardController {
     return this.boardService.findByRandom(token);
   }
 
+  @Get('/others')
+  findOthers(@Headers('Authorization') token: string) {
+    return this.boardService.findByOthers(token);
+  }
   @Get('/recent')
   findRecent(@Headers('Authorization') token: string) {
     return this.boardService.findRecent(token);
